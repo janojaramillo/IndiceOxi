@@ -6,7 +6,7 @@
    Al publicar una versión nueva, suba el número de CACHE: eso descarta
    el caché anterior y fuerza la actualización en todos los teléfonos. */
 
-const CACHE = "oxigenacion-v2";
+const CACHE = "oxigenacion-v3";
 
 const CORE = [
   "./",

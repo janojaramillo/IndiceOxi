@@ -56,11 +56,14 @@ h1{font-size:30px;line-height:1.15;font-weight:800;color:var(--teal-d);margin:0;
 .field label em{font-style:normal;font-size:13px;font-weight:400;color:var(--ink-4)}
 .inp{display:flex;align-items:stretch;background:#fff;border:1px solid var(--line-2);border-radius:8px;overflow:hidden}
 .inp:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,105,92,.14)}
-.inp input{flex:1;min-width:0;width:100%;border:0;outline:0;background:transparent;
-  color:var(--ink);padding:12px;font-size:19px;font-weight:600;font-family:var(--mono)}
+/* El número manda: nunca se comprime por debajo de 4 dígitos.
+   La unidad cede espacio antes que el campo. */
+.inp input{flex:1 1 auto;min-width:3.6em;width:100%;border:0;outline:0;background:transparent;
+  color:var(--ink);padding:12px 10px;font-size:19px;font-weight:600;font-family:var(--mono)}
 .inp input::placeholder{color:#8fa3b0;font-weight:400}
-.inp .u{display:flex;align-items:center;padding:0 10px;background:#eceff1;border-left:1px solid var(--line-2);
-  font-size:14px;color:#3a5c6b;font-family:var(--mono);white-space:nowrap}
+.inp .u{display:flex;align-items:center;flex:0 1 auto;min-width:0;padding:0 8px;background:#eceff1;
+  border-left:1px solid var(--line-2);font-size:13px;color:#3a5c6b;font-family:var(--mono);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 input[type=number]{-moz-appearance:textfield}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 
@@ -141,8 +144,8 @@ summary{font-size:14px;color:#2f5676;cursor:pointer;font-family:var(--mono);padd
   <div class="grid-2">
     <div class="field"><label for="temp">T.ª del paciente</label>
       <div class="inp"><input id="temp" type="number" step="any" value="37" placeholder="37"><span class="u">°C</span></div></div>
-    <div class="field"><label for="alt">Altitud del lugar</label>
-      <div class="inp"><input id="alt" type="number" step="any" value="0" placeholder="0"><span class="u">m s.n.m.</span></div></div>
+    <div class="field"><label for="alt">Altitud <em>s.n.m.</em></label>
+      <div class="inp"><input id="alt" type="number" step="any" value="0" placeholder="0"><span class="u">m</span></div></div>
   </div>
   <p class="note" id="ambiente"></p>
   <p class="note">La temperatura es la <b>corporal del recién nacido</b>, no la de la incubadora ni la de la
@@ -157,8 +160,8 @@ summary{font-size:14px;color:#2f5676;cursor:pointer;font-family:var(--mono);padd
       <div class="inp"><input id="pao2" type="number" step="any" placeholder="—"><span class="u">mmHg</span></div></div>
     <div class="field"><label for="paco2">PaCO₂</label>
       <div class="inp"><input id="paco2" type="number" step="any" placeholder="—"><span class="u">mmHg</span></div></div>
-    <div class="field"><label for="fio2">FiO₂</label>
-      <div class="inp"><input id="fio2" type="number" step="any" placeholder="—"><span class="u">0–1 / %</span></div></div>
+    <div class="field"><label for="fio2">FiO₂ <em>0–1 o %</em></label>
+      <div class="inp"><input id="fio2" type="number" step="any" placeholder="0.40"></div></div>
   </div>
   <div class="grid-3" style="margin-top:12px">
     <div class="field"><label for="spo2">SpO₂</label>
@@ -432,8 +435,8 @@ let hbSel = "";
   let h="";
   for(let i=0;i<PAIRS;i++){
     h+='<div class="pair"><div class="n">'+(i+1)+'</div>'+
-       '<div class="field"><label for="pf'+i+'">FiO₂</label><div class="inp">'+
-       '<input id="pf'+i+'" type="number" step="any" placeholder="—"><span class="u">0–1 / %</span></div></div>'+
+       '<div class="field"><label for="pf'+i+'">FiO₂ <em>0–1 o %</em></label><div class="inp">'+
+       '<input id="pf'+i+'" type="number" step="any" placeholder="—"></div></div>'+
        '<div class="field"><label for="ps'+i+'">SpO₂ pre</label><div class="inp">'+
        '<input id="ps'+i+'" type="number" step="any" placeholder="—"><span class="u">%</span></div></div></div>';
   }
