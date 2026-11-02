@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Índices de Oxigenación Neonatal</title>
+<meta name="description" content="Calculadora de índices de oxigenación neonatal: IO, OSI, SaFi, cortocircuito y relación V/Q.">
+<meta name="theme-color" content="#0b3d4a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Oxigenación">
+<style>
+:root{
+  --ink:#0b1b24; --ink-2:#2f4a5a; --ink-3:#45606e; --ink-4:#4a6274;
+  --teal:#00695c; --teal-d:#0b3d4a; --line:#c3d2dc; --line-2:#9db0bd;
+  --bg:#eef3f6; --card:#ffffff; --soft:#f1f5f7;
+  --amber:#8a5a00; --amber-bg:#fdf3e7; --amber-line:#d9a86a;
+  --red:#b3261e; --orange:#b34700; --green:#1b6e2f; --violet:#5a3fa0;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:linear-gradient(180deg,#eef3f6 0%,#e6edf2 100%);
+  background-attachment:fixed;
+  color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.5;
+  padding:env(safe-area-inset-top) 12px calc(env(safe-area-inset-bottom) + 28px);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:560px;margin:0 auto}
+
+header{text-align:center;padding:22px 0 14px}
+.eyebrow{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:8px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 3px rgba(0,105,92,.16)}
+.eyebrow span{font-size:13px;letter-spacing:.26em;color:#17645a;font-family:var(--mono);font-weight:600}
+h1{font-size:30px;line-height:1.15;font-weight:800;color:var(--teal-d);margin:0;letter-spacing:-.02em}
+.sub{font-size:14px;color:var(--ink-3);margin:8px 0 0}
+.offline-note{font-size:13px;color:var(--ink-4);margin:10px 0 0;font-family:var(--mono)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.card h2{font-size:14px;letter-spacing:.14em;font-weight:700;margin:0 0 12px;font-family:var(--mono);text-transform:uppercase}
+.c-teal h2{color:#17645a} .c-blue h2{color:#1f5574} .c-violet h2{color:var(--violet)}
+.c-green h2{color:#0f6b5c} .c-gray h2{color:var(--ink-3)}
+.note{font-size:13px;color:var(--ink-3);line-height:1.6;margin:10px 0 0}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media (max-width:360px){.grid-3{grid-template-columns:1fr 1fr}}
+
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-size:15px;font-weight:600;color:var(--ink-2);font-family:var(--mono);letter-spacing:.03em}
+.field label em{font-style:normal;font-size:13px;font-weight:400;color:var(--ink-4)}
+.inp{display:flex;align-items:stretch;background:#fff;border:1px solid var(--line-2);border-radius:8px;overflow:hidden}
+.inp:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,105,92,.14)}
+.inp input{flex:1;min-width:0;width:100%;border:0;outline:0;background:transparent;
+  color:var(--ink);padding:12px;font-size:19px;font-weight:600;font-family:var(--mono)}
+.inp input::placeholder{color:#8fa3b0;font-weight:400}
+.inp .u{display:flex;align-items:center;padding:0 10px;background:#eceff1;border-left:1px solid var(--line-2);
+  font-size:14px;color:#3a5c6b;font-family:var(--mono);white-space:nowrap}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+
+.seg{display:flex;gap:8px}
+.seg button{flex:1;padding:13px 4px;border-radius:8px;cursor:pointer;background:#fff;
+  border:1px solid var(--line-2);color:var(--ink-4);font-size:15px;font-family:var(--mono)}
+.seg button[aria-pressed=true]{background:#e3f2ef;border:1.5px solid var(--teal);color:var(--teal);font-weight:700}
+
+.pair{display:grid;grid-template-columns:20px 1fr 1fr;gap:9px;align-items:end;margin-bottom:10px}
+.pair .n{font-family:var(--mono);color:#3a5c6b;font-size:15px;padding-bottom:12px}
+
+.warn-box{margin-top:6px;padding:12px;border-radius:8px;background:var(--amber-bg);
+  border:1px solid var(--amber-line);font-size:13px;color:#8a4b00;line-height:1.6}
+.ok-box{margin-top:8px;padding:12px;border-radius:8px;background:#eaf6f1;
+  border:1px solid #9bc4b8;font-size:13px;color:#0f5f52;line-height:1.6}
+
+.btn{width:100%;padding:14px;border-radius:8px;background:#fff;border:1px solid var(--line-2);
+  color:var(--ink-2);font-size:15px;font-weight:600;font-family:var(--mono);cursor:pointer}
+
+.row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  padding:11px 0;border-bottom:1px solid #dde5ea}
+.row:last-child{border-bottom:0}
+.row .lab{font-size:16px;color:#32505f;font-family:var(--mono)}
+.row .det{display:block;font-size:13px;color:var(--ink-3);font-family:var(--sans);margin-top:3px}
+.row .val{font-size:26px;font-weight:800;color:var(--teal-d);font-family:var(--mono);letter-spacing:-.02em;white-space:nowrap}
+.row .val.w{color:var(--red)}
+.row .un{font-size:14px;color:var(--ink-4);font-family:var(--mono);margin-left:6px}
+
+.badge{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px;border-radius:8px;margin-bottom:8px;border:1px solid}
+.badge .ref{font-size:15px;color:#32505f;font-family:var(--mono)}
+.badge .nt{display:block;font-size:13px;color:var(--ink-3);margin-top:3px;font-family:var(--sans)}
+.badge .tag{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:6px;
+  background:#fff;border:1.5px solid;font-size:14px;font-weight:800;font-family:var(--mono);
+  text-align:right;flex-shrink:0}
+.badge .tag i{width:8px;height:8px;border-radius:50%;display:block}
+
+.sect{font-size:13px;font-weight:700;color:#27485a;font-family:var(--mono);
+  letter-spacing:.08em;margin:16px 0 7px}
+.sect:first-child{margin-top:0}
+
+.flag{display:flex;gap:9px;align-items:flex-start;font-size:14px;line-height:1.55;padding:5px 0}
+.flag i{font-style:normal;width:16px;flex-shrink:0;font-family:var(--mono)}
+.f-ok{color:var(--teal)} .f-warn{color:var(--amber)} .f-error{color:var(--red)} .f-info{color:#1f5574}
+
+table.data{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:14px;margin-top:8px}
+table.data th{text-align:left;font-size:13px;color:#27485a;font-weight:700;padding:5px 4px;border-bottom:1px solid var(--line)}
+table.data td{padding:7px 4px;color:#0f5f52;border-bottom:1px solid #eef2f5}
+table.data td.off{color:var(--orange)}
+
+details{margin-top:12px}
+summary{font-size:14px;color:#2f5676;cursor:pointer;font-family:var(--mono);padding:6px 0}
+.thresholds{margin-top:8px;padding:12px;background:var(--soft);border-radius:8px;
+  font-size:13px;color:#3a5c6b;line-height:1.9;font-family:var(--mono)}
+.thresholds b{display:block;color:#27485a;margin-top:10px}
+.thresholds b:first-child{margin-top:0}
+
+.empty{background:#fff;border:1px dashed var(--line-2);border-radius:12px;
+  padding:30px 20px;text-align:center;color:#3a5c6b;font-size:16px;line-height:1.6}
+.disclaimer{padding:14px;background:var(--soft);border:1px solid var(--line);
+  border-radius:10px;font-size:13px;color:var(--ink-3);line-height:1.6;margin-top:4px}
+.refs{font-size:13px;color:var(--ink-3);line-height:1.9}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow"><span class="dot"></span><span>NEONATAL RESPIRATORY</span></div>
+  <h1>Índices de Oxigenación</h1>
+  <p class="sub">IO por falla respiratoria hipoxémica · Montreux 2017 si hay sospecha de SDRA · OSI y SaFi por PALICC-2</p>
+  <p class="offline-note" id="netstate">—</p>
+</header>
+
+<section class="card c-teal">
+  <h2>◈ Condiciones del cálculo</h2>
+  <div class="grid-2">
+    <div class="field"><label for="temp">T.ª del paciente</label>
+      <div class="inp"><input id="temp" type="number" step="any" value="37" placeholder="37"><span class="u">°C</span></div></div>
+    <div class="field"><label for="alt">Altitud del lugar</label>
+      <div class="inp"><input id="alt" type="number" step="any" value="0" placeholder="0"><span class="u">m s.n.m.</span></div></div>
+  </div>
+  <p class="note" id="ambiente"></p>
+  <p class="note">La temperatura es la <b>corporal del recién nacido</b>, no la de la incubadora ni la de la
+    sala: el gas alveolar está saturado de vapor de agua a la temperatura del cuerpo. Si el niño está
+    hipotérmico o febril, ponga su temperatura real. La altitud sí es la del lugar.</p>
+</section>
+
+<section class="card c-blue">
+  <h2>◈ Gasometría y oximetría</h2>
+  <div class="grid-3">
+    <div class="field"><label for="pao2">PaO₂</label>
+      <div class="inp"><input id="pao2" type="number" step="any" placeholder="—"><span class="u">mmHg</span></div></div>
+    <div class="field"><label for="paco2">PaCO₂</label>
+      <div class="inp"><input id="paco2" type="number" step="any" placeholder="—"><span class="u">mmHg</span></div></div>
+    <div class="field"><label for="fio2">FiO₂</label>
+      <div class="inp"><input id="fio2" type="number" step="any" placeholder="—"><span class="u">0–1 / %</span></div></div>
+  </div>
+  <div class="grid-3" style="margin-top:12px">
+    <div class="field"><label for="spo2">SpO₂</label>
+      <div class="inp"><input id="spo2" type="number" step="any" placeholder="—"><span class="u">%</span></div></div>
+    <div class="field"><label for="pre">SpO₂ pre</label>
+      <div class="inp"><input id="pre" type="number" step="any" placeholder="—"><span class="u">%</span></div></div>
+    <div class="field"><label for="post">SpO₂ post</label>
+      <div class="inp"><input id="post" type="number" step="any" placeholder="—"><span class="u">%</span></div></div>
+  </div>
+  <p class="note">Pre-ductal: mano derecha. Post-ductal: cualquier pie. Registre siempre ambas: el gradiente
+    entre ellas es el único dato aquí que discrimina cortocircuito ductal.</p>
+  <div class="field" style="margin-top:14px"><label>Hemoglobina</label>
+    <div class="seg" id="hbseg">
+      <button type="button" data-v="10" aria-pressed="false">10 g/dL</button>
+      <button type="button" data-v="12.5" aria-pressed="false">12.5 g/dL</button>
+      <button type="button" data-v="15" aria-pressed="false">15 g/dL</button>
+    </div>
+  </div>
+  <div class="field" style="margin-top:12px"><label for="svo2">SvO₂ <em>opcional</em></label>
+    <div class="inp"><input id="svo2" type="number" step="any" placeholder="—"><span class="u">%</span></div></div>
+  <p class="note">Sin SvO₂ medida se asume una diferencia arteriovenosa de 5 mL/dL. Use solo sangre venosa
+    central (catéter umbilical en la unión cava-aurícula); una periférica no representa la mezcla venosa.</p>
+</section>
+
+<section class="card c-blue">
+  <h2>◈ Prueba de reducción de oxígeno</h2>
+  <p class="note" style="margin-top:0">Empiece con la FiO₂ que deje la SpO₂ entre 94 y 97 %, y baje por pasos
+    hasta cerca de 85 %. Espere estado estable en cada paso. El par alto es el que cierra el hombro de la curva.</p>
+  <div id="pairs" style="margin-top:12px"></div>
+  <div class="warn-box">Haga la prueba solo en un paciente estable, con monitorización continua. Suspenda ante
+    SpO₂ por debajo de 80 %, bradicardia o deterioro clínico.</div>
+</section>
+
+<section class="card c-blue">
+  <h2>◈ Parámetros ventilatorios</h2>
+  <div class="grid-3">
+    <div class="field"><label for="map">MAP</label>
+      <div class="inp"><input id="map" type="number" step="any" placeholder="—"><span class="u">cmH₂O</span></div></div>
+    <div class="field"><label for="fr">FR</label>
+      <div class="inp"><input id="fr" type="number" step="any" placeholder="—"><span class="u">rpm</span></div></div>
+    <div class="field"><label for="ti">Ti</label>
+      <div class="inp"><input id="ti" type="number" step="any" placeholder="—"><span class="u">s</span></div></div>
+  </div>
+  <div class="grid-2" style="margin-top:12px">
+    <div class="field"><label for="pip">PIP</label>
+      <div class="inp"><input id="pip" type="number" step="any" placeholder="—"><span class="u">cmH₂O</span></div></div>
+    <div class="field"><label for="peep">PEEP</label>
+      <div class="inp"><input id="peep" type="number" step="any" placeholder="—"><span class="u">cmH₂O</span></div></div>
+  </div>
+</section>
+
+<button class="btn" id="clear" type="button">Limpiar campos</button>
+
+<div id="out" style="margin-top:14px"></div>
+
+<div class="disclaimer">
+  Herramienta de apoyo al cálculo. No sustituye el juicio clínico ni establece indicación terapéutica.
+  Los umbrales de Montreux exigen además los criterios no numéricos de la definición: el IO aislado no
+  diagnostica SDRA neonatal. Confirme cualquier decisión de iNO o ECMO con gasometrías repetidas y con
+  el protocolo de su servicio.
+</div>
+
+</div>
+
+<script>
+"use strict";
+/* ══════════════ MODELO ══════════════ */
+const R_DEFAULT = 0.8;
+const MODELO = { P50: 26.6, hillN: 2.7, SvO2: 0.75, PACO2: 40, R: 0.8 };
+const M3C = { VQtot: 0.85, f2: 0.9 };
+
+const calcPatm = a => 760 * Math.pow(1 - 0.0000225577 * a, 5.25588);
+const calcPH2O = t => 0.61078 * Math.exp((17.2694 * t) / (t + 237.29)) * 7.50062;
+const fmt = (v, d = 2) => (v === null || v === undefined || isNaN(v) || !isFinite(v)) ? "—" : v.toFixed(d);
+const hill = p => { const a = Math.pow(Math.max(p, 0.01), MODELO.hillN); return a / (a + Math.pow(MODELO.P50, MODELO.hillN)); };
+const hillInv = s => (s <= 0 || s >= 1) ? null : MODELO.P50 * Math.pow(s / (1 - s), 1 / MODELO.hillN);
+
+const NC = { label: "SIN DATOS SUFICIENTES", level: -1, note: "" };
+
+/* Clasificación principal: falla respiratoria hipoxémica (uso corriente en UCIN) */
+function classifyOI_HRF(oi){
+  if(oi===null||isNaN(oi)) return NC;
+  if(oi<=15) return {label:"LEVE",level:1,note:"IO ≤ 15"};
+  if(oi<=25) return {label:"MODERADA",level:2,note:"16–25 · umbral iNO en IO 25 (CPS: > 15–20)"};
+  if(oi<=40) return {label:"SEVERA",level:3,note:"26–40 · IO 25 ≈ 50 % de riesgo de ECMO o muerte"};
+  return {label:"MUY SEVERA",level:5,note:"> 40 · criterio habitual de inicio de ECMO"};
+}
+/* Secundaria: Montreux 2017, solo con los criterios no numéricos cumplidos */
+function classifyOI_Montreux(oi){
+  if(oi===null||isNaN(oi)) return NC;
+  if(oi<4) return {label:"NO CUMPLE CRITERIO",level:0,note:"IO < 4"};
+  if(oi<8) return {label:"NARDS LEVE",level:1,note:"4 ≤ IO < 8"};
+  if(oi<16) return {label:"NARDS MODERADO",level:2,note:"8 ≤ IO < 16"};
+  return {label:"NARDS SEVERO",level:4,note:"IO ≥ 16"};
+}
+function classifyOSI(o){
+  if(o===null||isNaN(o)) return NC;
+  if(o<5) return {label:"NO CUMPLE CRITERIO",level:0,note:"OSI < 5"};
+  if(o<7.5) return {label:"LEVE",level:1,note:"5 ≤ OSI < 7.5"};
+  if(o<12.3) return {label:"MODERADA",level:2,note:"7.5 ≤ OSI < 12.3"};
+  return {label:"SEVERA",level:4,note:"OSI ≥ 12.3"};
+}
+function classifyPF(p){
+  if(p===null||isNaN(p)) return NC;
+  if(p>300) return {label:"SIN CRITERIO",level:0,note:"> 300"};
+  if(p>200) return {label:"LEVE",level:1,note:"201–300"};
+  if(p>100) return {label:"MODERADA",level:2,note:"101–200"};
+  return {label:"SEVERA",level:4,note:"≤ 100"};
+}
+function classifySF(s){
+  if(s===null||isNaN(s)) return NC;
+  if(s>250) return {label:"SIN CRITERIO",level:0,note:"> 250"};
+  if(s>220) return {label:"LEVE",level:1,note:"221–250"};
+  if(s>150) return {label:"MODERADA",level:2,note:"151–220"};
+  return {label:"SEVERA",level:4,note:"≤ 150"};
+}
+/* El umbral fijo de A–a solo tiene sentido a FiO₂ alta */
+function classifyAa(aa, f){
+  if(aa===null||isNaN(aa)||f===null||isNaN(f)) return NC;
+  if(f<0.9) return {label:"NO INTERPRETABLE",level:-2,note:"FiO₂ = "+fmt(f,2)+" — use IO o a/A"};
+  if(aa<150) return {label:"SIN ALTERACIÓN MARCADA",level:0,note:"< 150 a FiO₂ ≥ 0.9"};
+  if(aa<400) return {label:"ALTERACIÓN MODERADA",level:2,note:"150–399"};
+  if(aa<600) return {label:"ALTERACIÓN SEVERA",level:3,note:"400–599"};
+  return {label:"CRÍTICA",level:5,note:"≥ 600 — criterio clásico ECMO a nivel del mar"};
+}
+function classifyaA(r){
+  if(r===null||isNaN(r)) return NC;
+  if(r>0.75) return {label:"NORMAL",level:0,note:"> 0.75"};
+  if(r>0.60) return {label:"LEVE",level:1,note:"0.61–0.75"};
+  if(r>0.30) return {label:"MODERADA",level:2,note:"0.31–0.60"};
+  return {label:"SEVERA",level:4,note:"≤ 0.30"};
+}
+function classifyDuctal(d){
+  if(d===null||isNaN(d)) return NC;
+  if(d<5) return {label:"SIN GRADIENTE",level:0,note:"< 5 %"};
+  if(d<8) return {label:"LIMÍTROFE",level:1,note:"5–7 %"};
+  if(d<10) return {label:"SIGNIFICATIVO",level:2,note:"8–9 %"};
+  return {label:"MARCADO",level:4,note:"≥ 10 %"};
+}
+
+/* Metas de monitoreo: objetivos de titulación, no gravedad */
+const META={ok:n=>({label:"EN META",level:0,note:n}),mod:n=>({label:"MODERADO",level:2,note:n}),
+  grave:n=>({label:"GRAVE",level:4,note:n}),gap:n=>({label:"ZONA NO DEFINIDA",level:-2,note:n})};
+const metaAa=v=>v===null||isNaN(v)?NC:v<20?META.ok("< 20"):v<=100?META.mod("20–100"):META.grave("> 100");
+const metaOI=v=>v===null||isNaN(v)?NC:v<5?META.ok("< 5"):v<10?META.gap("5–10 · no definido en la tabla de origen"):v<=15?META.mod("10–15"):META.grave("> 15");
+const metaOSI=v=>v===null||isNaN(v)?NC:v<2.5?META.ok("< 2.5"):v<5?META.gap("2.5–5 · no definido en la tabla de origen"):v<=7.5?META.mod("5–7.5"):META.grave("> 7.5");
+const metaSaFi=v=>v===null||isNaN(v)?NC:v>350?META.ok("> 350"):v>=180?META.mod("180–350"):META.grave("< 180");
+const metaVQ=v=>v===null||isNaN(v)?NC:v>0.75?META.ok("> 0.75"):v>=0.50?META.mod("0.50–0.75"):META.grave("< 0.50");
+const metaShunt=v=>v===null||isNaN(v)?NC:v<10?META.ok("< 10 %"):v<=20?META.mod("10–20 %"):META.grave("> 20 %");
+
+function sevColor(l){return {"-2":"#4a6274","-1":"#4a6274",0:"#00695c",1:"#1b6e2f",2:"#8a5a00",3:"#b34700",4:"#b3261e",5:"#8c0f1a"}[l]||"#32505f";}
+function sevBg(l){return {"-2":"#eef2f5","-1":"#eef2f5",0:"#e3f2ef",1:"#e7f3e8",2:"#fbf0dc",3:"#fcebe0",4:"#fceaea",5:"#f9e3e5"}[l]||"#eef2f5";}
+
+/* Cortocircuito por Berggren. Sin SvO₂ medida asume C(a-v)O₂ de 5 mL/dL,
+   suposición que falla justo en choque y HPPRN. */
+function calcShunt(o){
+  const {hb,pao2Alv,pao2,spo2,svo2}=o;
+  if(hb===null||pao2Alv===null||pao2===null||spo2===null) return null;
+  if(hb<=0||pao2Alv<=0) return null;
+  const Cc=1.34*hb+0.0031*pao2Alv, Ca=1.34*hb*(spo2/100)+0.0031*pao2;
+  let Cv,assumed;
+  if(svo2!==null&&svo2>0){Cv=1.34*hb*(svo2/100)+0.0031*40;assumed=false;}
+  else {Cv=Ca-5.0;assumed=true;}
+  const d=Cc-Cv; if(d<=0) return null;
+  return {qs:((Cc-Ca)/d)*100,assumed};
+}
+
+const pio2From=(f,patm,ph2o)=>(f===null||isNaN(f))?null:f*(patm-ph2o);
+
+/* Por par: Berggren basado en saturación (la Hb se cancela) y Riley para V-Q */
+function analizarPar(row,hb){
+  const Sa=row.spo2/100;
+  if(Sa<=0||Sa>=1) return Object.assign({},row,{invalido:true});
+  const PAO2=row.pio2-MODELO.PACO2/MODELO.R;
+  if(PAO2<=0) return Object.assign({},row,{invalido:true});
+  const Sc=hill(PAO2), PcO2=hillInv(Sa);
+  let shuntPct=null; if(Sc>MODELO.SvO2) shuntPct=((Sc-Sa)/(Sc-MODELO.SvO2))*100;
+  let vq=null; if(hb!==null&&hb>0) vq=(8.63*MODELO.R*(1.34*hb*(Sa-MODELO.SvO2)))/MODELO.PACO2;
+  return Object.assign({},row,{PAO2,Sc,PcO2,shuntPct,vq,
+    deltaPO2kPa:PcO2!==null?(row.pio2-PcO2)/7.50062:null});
+}
+function promediar(v){const a=v.filter(x=>x!==null&&!isNaN(x)&&isFinite(x));
+  return a.length?a.reduce((x,y)=>x+y,0)/a.length:null;}
+
+function validatePairs(rows){
+  const m=[];
+  if(rows.length<3){m.push({type:"warn",text:"Solo "+rows.length+" par(es) completo(s). El ajuste necesita al menos 3."});return m;}
+  const f=rows.map(r=>r.fio2Dec), s=rows.map(r=>r.spo2);
+  if(Math.max.apply(null,f)-Math.min.apply(null,f)<0.10)
+    m.push({type:"warn",text:"Las FiO₂ abarcan menos de 0.10. Sin recorrido no hay curva que ajustar."});
+  const meseta=s.filter(x=>x>97).length;
+  if(meseta>=1) m.push({type:"warn",text:meseta+" par(es) con SpO₂ > 97 %: en la meseta de la curva la saturación casi no cambia aunque suba la PO₂, y el oxímetro tiene 2–3 puntos de error. Use el par alto entre 94 y 97 %."});
+  if(Math.max.apply(null,s)<94) m.push({type:"warn",text:"La SpO₂ más alta fue "+fmt(Math.max.apply(null,s),0)+" %. Sin un punto entre 94 y 97 % no se separa cortocircuito de V/Q baja."});
+  if(Math.min.apply(null,s)>90) m.push({type:"info",text:"La SpO₂ más baja fue "+fmt(Math.min.apply(null,s),0)+" %. Conviene descender hasta cerca de 85 %."});
+  if(Math.min.apply(null,s)<80) m.push({type:"error",text:"SpO₂ de "+fmt(Math.min.apply(null,s),0)+" % registrada. Por debajo de 80 % la prueba debe suspenderse."});
+  const ord=rows.slice().sort((a,b)=>a.fio2Dec-b.fio2Dec);
+  if(!ord.every((r,i)=>i===0||r.spo2>=ord[i-1].spo2-1))
+    m.push({type:"warn",text:"La SpO₂ no crece de forma consistente con la FiO₂. Verifique que cada par se tomó en estado estable."});
+  return m;
+}
+
+/* ─── Ajuste de dos parámetros, tres compartimentos ───
+   Shunt + dos compartimentos ventilados (90 % / 10 % de la perfusión no
+   derivada). Parámetros: fs y fA2. VA/Q total anclada en 0.85 porque sin
+   medir ventilación no es identificable. Reporta la V/Q del compartimento
+   que recibe el 90 % del flujo. */
+const ccap=(p,hb)=>1.34*hb*hill(p)+0.0031*p;
+function resolverPAO2(vq,pio2,hb,cvo2,pb){
+  if(vq<=0) return 0.1;
+  let lo=0.1,hi=pio2;
+  for(let i=0;i<40;i++){const m=(lo+hi)/2;
+    if(vq*(pio2-m)/pb>(ccap(m,hb)-cvo2)/100) lo=m; else hi=m;}
+  return (lo+hi)/2;
+}
+function predecirSpO2(fs,fA2,pio2,hb,pb){
+  const cvo2=1.34*hb*MODELO.SvO2+0.0031*40;
+  const s2=hill(resolverPAO2(M3C.VQtot*fA2/M3C.f2,pio2,hb,cvo2,pb));
+  const s1=hill(resolverPAO2(M3C.VQtot*(1-fA2)/(1-M3C.f2),pio2,hb,cvo2,pb));
+  return ((1-fs)*(M3C.f2*s2+(1-M3C.f2)*s1)+fs*MODELO.SvO2)*100;
+}
+function rmsePares(fs,fA2,rows,hb,pb){
+  let e=0; for(const r of rows) e+=Math.pow(predecirSpO2(fs,fA2,r.pio2,hb,pb)-r.spo2,2);
+  return Math.sqrt(e/rows.length);
+}
+function ajustarDosParametros(rows,hb,pb){
+  if(rows.length<3||hb===null||hb<=0) return null;
+  let best={rmse:Infinity,fs:0,fA2:0.9};
+  const barrer=(a,b,c,d,n)=>{
+    for(let i=0;i<=n;i++){const fs=a+(b-a)*i/n; if(fs<0||fs>0.95) continue;
+      for(let j=0;j<=n;j++){const fA2=c+(d-c)*j/n; if(fA2<=0.005||fA2>=0.98) continue;
+        const r=rmsePares(fs,fA2,rows,hb,pb); if(r<best.rmse) best={rmse:r,fs,fA2};}}};
+  barrer(0,0.6,0.02,0.95,40);
+  barrer(best.fs-0.04,best.fs+0.04,best.fA2-0.06,best.fA2+0.06,20);
+  barrer(best.fs-0.005,best.fs+0.005,best.fA2-0.008,best.fA2+0.008,20);
+  let fsMin=null,fsMax=null; const tol=Math.max(2.0,best.rmse+1.0);
+  for(let fs=0;fs<=0.6;fs+=0.02){
+    let mej=Infinity;
+    for(let fA2=0.02;fA2<=0.95;fA2+=0.01){const r=rmsePares(fs,fA2,rows,hb,pb); if(r<mej) mej=r;}
+    if(mej<tol){ if(fsMin===null) fsMin=fs; fsMax=fs; }
+  }
+  return {fs:best.fs,fA2:best.fA2,rmse:best.rmse,
+    vq:M3C.VQtot*best.fA2/M3C.f2, shuntPct:best.fs*100,
+    fsMinPct:fsMin===null?null:fsMin*100, fsMaxPct:fsMax===null?null:fsMax*100,
+    residuos:rows.map(r=>({idx:r.idx,spo2:r.spo2,pred:predecirSpO2(best.fs,best.fA2,r.pio2,hb,pb)}))};
+}
+
+/* Orientación: A–a, a/A e IR son transformaciones de las mismas tres cifras.
+   Solo el gradiente ductal y la respuesta a FiO₂ 1.0 discriminan de verdad. */
+function getOrientation(o){
+  const out=[];
+  if(o.ductalDiff!==null&&!isNaN(o.ductalDiff)&&o.ductalDiff>=5)
+    out.push({c:"#b3261e",i:"◆",t:"Gradiente pre/post-ductal de "+fmt(o.ductalDiff,0)+" % — compatible con cortocircuito D→I por el ductus. Descartar HPPRN y cardiopatía ductus-dependiente con ecocardiografía."});
+  else if(o.ductalDiff!==null&&!isNaN(o.ductalDiff))
+    out.push({c:"#1f5574",i:"○",t:"Sin gradiente ductal relevante. Un shunt intracardíaco o intrapulmonar no queda excluido por este dato."});
+  else
+    out.push({c:"#4a6274",i:"—",t:"Sin SpO₂ pre y post-ductal no es posible orientar shunt ductal. Es el dato que más cambia la conducta y falta."});
+  if(o.oi!==null&&!isNaN(o.oi)&&o.oi>=25)
+    out.push({c:"#b3261e",i:"▲",t:"IO ≥ 25: umbral de los ensayos de iNO y de contacto con centro ECMO; se asocia a cerca de 50 % de riesgo de ECMO o muerte. Confirmar en dos mediciones separadas al menos 15 minutos."});
+  if(o.aA!==null&&!isNaN(o.aA)&&o.aA<0.3&&o.fio2!==null&&o.fio2>=0.9&&o.pao2!==null&&o.pao2<100)
+    out.push({c:"#b34700",i:"⬤",t:"PaO₂ baja pese a FiO₂ ≈ 1.0: patrón de shunt fijo más que de desequilibrio V/Q. Confirmar con prueba de hiperoxia formal y ecocardiografía."});
+  return out;
+}
+
+/* ══════════════ INTERFAZ ══════════════ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const PAIRS = 4;
+let hbSel = "";
+
+(function buildPairs(){
+  let h="";
+  for(let i=0;i<PAIRS;i++){
+    h+='<div class="pair"><div class="n">'+(i+1)+'</div>'+
+       '<div class="field"><label for="pf'+i+'">FiO₂</label><div class="inp">'+
+       '<input id="pf'+i+'" type="number" step="any" placeholder="—"><span class="u">0–1 / %</span></div></div>'+
+       '<div class="field"><label for="ps'+i+'">SpO₂ pre</label><div class="inp">'+
+       '<input id="ps'+i+'" type="number" step="any" placeholder="—"><span class="u">%</span></div></div></div>';
+  }
+  $("pairs").innerHTML=h;
+})();
+
+$("hbseg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b) return;
+  hbSel = (hbSel === b.dataset.v) ? "" : b.dataset.v;
+  [...$("hbseg").children].forEach(x => x.setAttribute("aria-pressed", String(x.dataset.v === hbSel)));
+  run();
+});
+
+const num = v => { const n = parseFloat(v); return isNaN(n) ? null : n; };
+const IDS = ["temp","alt","pao2","paco2","fio2","spo2","pre","post","svo2","map","fr","ti","pip","peep"];
+
+function compute(){
+  const g = id => num($(id).value);
+  const f0=g("fio2"), m=g("map"), co2=g("paco2"), o2=g("pao2"), sat=g("spo2");
+  const pre=g("pre"), post=g("post"), r=g("fr");
+  const t=g("temp")===null?37:g("temp"), a=g("alt")===null?0:g("alt");
+  const tiV=g("ti"), pipV=g("pip"), peepV=g("peep");
+  const hbVal = hbSel==="" ? null : parseFloat(hbSel);
+  const svo2V = g("svo2");
+
+  const patm=calcPatm(a), ph2o=calcPH2O(t), pb=patm-ph2o;
+  $("ambiente").innerHTML='Patm <b>'+fmt(patm)+'</b> mmHg · PH₂O <b>'+fmt(ph2o)+'</b> mmHg'+
+    (t<36||t>38 ? ' <span style="color:#8a5a00">· T.ª '+fmt(t,1)+' °C fuera de 36–38: confirme que es la del paciente</span>' : '');
+
+  // Pares de la prueba (independientes del resto)
+  const pairRows=[];
+  for(let i=0;i<PAIRS;i++){
+    const pf=num($("pf"+i).value), ps=num($("ps"+i).value);
+    if(pf===null||ps===null) continue;
+    let fd=pf; if(pf>1&&pf<=100) fd=pf/100;
+    pairRows.push({idx:i+1,fio2Dec:fd,spo2:ps,pio2:pio2From(fd,patm,ph2o)});
+  }
+  const pairFlags = pairRows.length ? validatePairs(pairRows) : [];
+  const pairAn = pairRows.map(x=>analizarPar(x,hbVal));
+  const prShunt = pairRows.length>=3 ? promediar(pairAn.map(x=>x.shuntPct)) : null;
+  const prVQ    = pairRows.length>=3 ? promediar(pairAn.map(x=>x.vq)) : null;
+  const prDelta = pairRows.length>=3 ? promediar(pairAn.map(x=>x.deltaPO2kPa)) : null;
+  const ajuste  = ajustarDosParametros(pairRows,hbVal,pb);
+  if(pairRows.length>=3 && hbVal===null)
+    pairFlags.push({type:"warn",text:"Sin hemoglobina no se calcula la V-Q por pares ni el ajuste. El cortocircuito por pares sí, porque la Hb se cancela."});
+
+  if(f0===null||m===null||(o2===null&&sat===null))
+    return {sinDatos:true,pairRows,pairAn,pairFlags,prShunt,prVQ,prDelta,ajuste};
+
+  let fio2Dec=f0, conv=false;
+  if(f0>1&&f0<=100){fio2Dec=f0/100;conv=true;}
+
+  let pao2Alv=null,pao2AlvS=null,aaGrad=null,aA=null,ri=null;
+  if(co2!==null){
+    pao2Alv=fio2Dec*pb-co2*(fio2Dec+(1-fio2Dec)/R_DEFAULT);
+    pao2AlvS=fio2Dec*pb-co2/R_DEFAULT;
+    if(o2!==null){aaGrad=pao2Alv-o2; aA=pao2Alv!==0?o2/pao2Alv:null; ri=o2!==0?aaGrad/o2:null;}
+  }
+  const oi  = (o2!==null&&o2!==0)?(m*fio2Dec*100)/o2:null;
+  const osi = (sat!==null&&sat!==0)?(m*fio2Dec*100)/sat:null;
+  const pf  = (o2!==null&&fio2Dec!==0)?o2/fio2Dec:null;
+  const pfC = pf!==null?pf*(760/patm):null;
+  const sf  = (sat!==null&&fio2Dec!==0)?sat/fio2Dec:null;
+
+  let te=null,ie=null,cyc=null,mapEst=null;
+  if(r!==null&&r>0){ cyc=60/r;
+    if(tiV!==null&&tiV>0){ te=cyc-tiV;
+      if(te>0){ ie=te/tiV; if(pipV!==null&&peepV!==null) mapEst=(tiV*pipV+te*peepV)/cyc; } } }
+  const deltaP = (pipV!==null&&peepV!==null)?pipV-peepV:null;
+  const ductal = (pre!==null&&post!==null)?pre-post:null;
+  const shunt  = calcShunt({hb:hbVal,pao2Alv,pao2:o2,spo2:sat,svo2:svo2V});
+
+  const flags=[];
+  if(conv) flags.push({type:"info",text:"FiO₂ leída como "+f0+" % → "+fmt(fio2Dec,2)});
+  if(fio2Dec<=0||fio2Dec>1) flags.push({type:"error",text:"FiO₂ = "+fmt(fio2Dec)+" fuera de (0, 1]"});
+  if(o2!==null&&o2<15) flags.push({type:"warn",text:"PaO₂ = "+o2+": si el equipo reporta en kPa, multiplique por 7.5 antes de ingresar"});
+  if(co2!==null&&co2<10) flags.push({type:"warn",text:"PaCO₂ = "+co2+": verifique unidades (kPa vs mmHg)"});
+  if(pao2Alv!==null&&pao2Alv<=0) flags.push({type:"error",text:"PAO₂ = "+fmt(pao2Alv)+" ≤ 0 — datos incompatibles"});
+  if(aA!==null&&(aA<0||aA>1)) flags.push({type:"warn",text:"a/A = "+fmt(aA)+" fuera de [0, 1] — revise PaO₂, PaCO₂ o FiO₂"});
+  if(sat!==null){
+    if(sat>97) flags.push({type:"warn",text:"SpO₂ = "+sat+" %: por encima de 97 % la curva se aplana y el OSI subestima la gravedad. PALICC-2 exige titular a 88–97 % antes de calcular."});
+    else if(sat<88) flags.push({type:"warn",text:"SpO₂ = "+sat+" %: por debajo de 88 % el OSI y el SaFi quedan fuera del rango de titulación de PALICC-2."});
+    else flags.push({type:"ok",text:"SpO₂ = "+sat+" % dentro del rango 88–97 % exigido por PALICC-2"});
+  }
+  if(mapEst!==null&&Math.abs(mapEst-m)>2)
+    flags.push({type:"warn",text:"MAP ingresada "+fmt(m,1)+" vs estimada "+fmt(mapEst,1)+" cmH₂O con PIP/PEEP/Ti/FR. Diferencia > 2 — revise cuál corresponde al ventilador."});
+  if(a>0&&pf!==null) flags.push({type:"info",text:"P/F sin corregir "+fmt(pf,0)+" → corregido por Patm "+fmt(pfC,0)+" mmHg"});
+  if(ri!==null) flags.push({type:"info",text:"IR, A–a y a/A derivan de las mismas tres cifras: IR = (1 / a/A) − 1. Su concordancia no es confirmación independiente."});
+  if(shunt&&shunt.assumed) flags.push({type:"warn",text:"Cortocircuito con SvO₂ asumida. El mismo paciente puede pasar de 37 % a 61 % según la SvO₂ real sea 45 % o 70 %. Úselo como tendencia, no como cifra."});
+  if(sat!==null&&o2!==null&&hbVal!==null) flags.push({type:"info",text:"La hemoglobina fetal desplaza la curva de disociación: el contenido arterial calculado desde SpO₂ subestima la afinidad real en el recién nacido."});
+  flags.push({type:"info",text:"Patm "+fmt(patm)+" mmHg · PH₂O "+fmt(ph2o)+" mmHg · R = "+R_DEFAULT});
+
+  return {
+    patm,ph2o,pao2Alv,pao2AlvS,aaGrad,aA,ri,oi,osi,pf,pfC,sf,fio2Dec,
+    te,ie,cyc,deltaP,mapEst,ductal,shunt,flags,pre,post,
+    oiHRF:classifyOI_HRF(oi), oiMon:classifyOI_Montreux(oi), osiC:classifyOSI(osi),
+    pfC_:classifyPF(pfC), sfC:classifySF(sf), aaC:classifyAa(aaGrad,fio2Dec),
+    aAC:classifyaA(aA), ductC:classifyDuctal(ductal),
+    metas:{aa:metaAa(aaGrad),oi:metaOI(oi),osi:metaOSI(osi),safi:metaSaFi(sf),
+           vq:metaVQ(aA),shunt:metaShunt(shunt?shunt.qs:null)},
+    orient:getOrientation({ductalDiff:ductal,oi,aA,fio2:fio2Dec,pao2:o2}),
+    pairRows,pairAn,pairFlags,prShunt,prVQ,prDelta,ajuste
+  };
+}
+
+const row=(l,v,u,d,w)=>'<div class="row"><div><span class="lab">'+l+'</span>'+
+  (d?'<span class="det">'+d+'</span>':'')+'</div><div style="text-align:right"><span class="val'+
+  (w?' w':'')+'">'+v+'</span>'+(u?'<span class="un">'+u+'</span>':'')+'</div></div>';
+
+function badge(c,ref){
+  const col=sevColor(c.level), bg=sevBg(c.level);
+  return '<div class="badge" style="background:'+bg+';border-color:'+col+'55">'+
+    '<div><span class="ref">'+ref+'</span>'+(c.note?'<span class="nt">'+c.note+'</span>':'')+'</div>'+
+    '<span class="tag" style="border-color:'+col+';color:'+col+'"><i style="background:'+col+'"></i>'+c.label+'</span></div>';
+}
+const flagList = fs => fs.map(f=>'<div class="flag f-'+f.type+'"><i>'+
+  ({ok:"✓",warn:"⚠",error:"✗",info:"ℹ"}[f.type]||"•")+'</i><span>'+esc(f.text)+'</span></div>').join("");
+
+function pruebaBlock(R){
+  if(!R.pairRows.length) return "";
+  let h='<div class="sect">PRUEBA DE REDUCCIÓN DE OXÍGENO — '+R.pairRows.length+' PAR(ES)</div>';
+  h+='<table class="data"><tr><th>#</th><th>FiO₂</th><th>SpO₂</th><th>Shunt %</th><th>V-Q</th></tr>';
+  R.pairAn.forEach(p=>{h+='<tr><td>'+p.idx+'</td><td>'+fmt(p.fio2Dec,2)+'</td><td>'+fmt(p.spo2,0)+
+    '</td><td>'+fmt(p.shuntPct,1)+'</td><td>'+fmt(p.vq,2)+'</td></tr>';});
+  h+='</table>';
+  if(R.prShunt!==null){
+    h+=row("Cortocircuito D→I (pares)",fmt(R.prShunt,0),"%","Berggren por saturación, promediado — normal &lt; 8 %");
+    h+=row("Relación V-Q (pares)",fmt(R.prVQ,2),"","Riley, promediado — normal ≈ 0.8");
+    h+=row("Diferencia PiO₂ − PO₂ cap.",fmt(R.prDelta,1),"kPa","Desplazamiento a la derecha — normal &lt; 7 kPa");
+  }
+  if(R.ajuste){
+    const a=R.ajuste, ancho=(a.fsMaxPct-a.fsMinPct)>15;
+    h+='<div class="sect">AJUSTE DE DOS PARÁMETROS — TRES COMPARTIMENTOS</div>';
+    h+=row("Cortocircuito D→I (ajuste)",fmt(a.shuntPct,1),"%","Estimado a la vez que la V/Q, no por separado");
+    h+=row("VA/Q (ajuste)",fmt(a.vq,2),"","Compartimento con el 90 % del flujo — normal &gt; 0.85");
+    h+=row("Error del ajuste",fmt(a.rmse,2),"% SpO₂","Diferencia típica entre SpO₂ observada y predicha");
+    if(a.fsMinPct!==null)
+      h+='<div class="'+(ancho?"warn-box":"ok-box")+'">Con estos pares, cualquier cortocircuito entre <b>'+
+        fmt(a.fsMinPct,0)+' % y '+fmt(a.fsMaxPct,0)+' %</b> explica los datos igual de bien.'+
+        (ancho?' El rango es demasiado ancho para separar cortocircuito de V/Q baja: agregue un par con SpO₂ de 94–97 % para cerrar el hombro de la curva.'
+              :' El rango es estrecho: la curva separa bien los dos mecanismos.')+'</div>';
+    h+='<table class="data"><tr><th>#</th><th>SpO₂ obs</th><th>SpO₂ pred</th><th>residuo</th></tr>';
+    a.residuos.forEach(r=>{const d=r.pred-r.spo2;
+      h+='<tr><td>'+r.idx+'</td><td>'+fmt(r.spo2,0)+'</td><td>'+fmt(r.pred,1)+
+         '</td><td class="'+(Math.abs(d)>2?"off":"")+'">'+(d>=0?"+":"")+fmt(d,1)+'</td></tr>';});
+    h+='</table>';
+  }
+  if(R.pairFlags.length) h+='<div style="margin-top:10px">'+flagList(R.pairFlags)+'</div>';
+  h+='<p class="note">Supuestos fijos: SvO₂ 75 %, PACO₂ 40 mmHg, R 0.8, P₅₀ 26.6, Hill 2.7, VA/Q total 0.85. '+
+     'El ajuste es una reconstrucción de la estructura publicada, no el programa validado: tome la V/Q como orden de magnitud.</p>';
+  return h;
+}
+
+function render(R){
+  if(R.sinDatos){
+    let h='<div class="empty">Ingrese <b>FiO₂</b>, <b>MAP</b> y al menos <b>PaO₂ o SpO₂</b>.<br>'+
+          'PaCO₂ habilita los índices alveolares; FR, Ti, PIP y PEEP habilitan la mecánica.</div>';
+    if(R.pairRows.length) h+='<section class="card c-green"><h2>◈ Prueba de oxígeno</h2>'+pruebaBlock(R)+'</section>';
+    $("out").innerHTML=h; return;
+  }
+  let h="";
+
+  h+='<section class="card c-green"><h2>◈ Índices calculados</h2>';
+  h+=row("Índice de Oxigenación (IO)",fmt(R.oi),"","(MAP × FiO₂ × 100) / PaO₂");
+  h+=row("Índice de Saturación (OSI)",fmt(R.osi),"","(MAP × FiO₂ × 100) / SpO₂");
+  h+=row("PaO₂ / FiO₂ corregido",fmt(R.pfC,0),"mmHg","P/F × 760 / Patm — sin corregir: "+fmt(R.pf,0));
+  h+=row("SaFi (SpO₂ / FiO₂)",fmt(R.sf,0),"","");
+  h+=row("PAO₂ (gas alveolar completa)",fmt(R.pao2Alv),"mmHg",
+      "FiO₂(Patm−PH₂O) − PaCO₂[FiO₂+(1−FiO₂)/R] · simplificada: "+fmt(R.pao2AlvS),R.pao2Alv!==null&&R.pao2Alv<=0);
+  h+=row("Gradiente A–a",fmt(R.aaGrad),"mmHg","");
+  h+=row("Relación a/A",fmt(R.aA),"","",R.aA!==null&&(R.aA<0||R.aA>1));
+  h+=row("Índice Respiratorio (IR)",fmt(R.ri),"","Derivado de a/A — no aporta información nueva");
+  if(R.shunt) h+=row("Cortocircuito D→I estimado",fmt(R.shunt.qs,1),"%",
+      R.shunt.assumed?"Berggren con diferencia arteriovenosa asumida de 5 mL/dL":"Berggren con SvO₂ ingresada");
+  if(R.ductal!==null) h+=row("Gradiente pre/post-ductal",fmt(R.ductal,0),"%",
+      "SpO₂ pre "+fmt(R.pre,0)+" % − post "+fmt(R.post,0)+" %",R.ductal>=5);
+  if(R.ie||R.deltaP!==null||R.mapEst!==null){
+    h+='<div class="sect">MECÁNICA</div>';
+    if(R.ie) h+=row("Relación I:E","1 : "+fmt(R.ie),"","Te "+fmt(R.te)+" s · ciclo "+fmt(R.cyc)+" s");
+    if(R.deltaP!==null) h+=row("ΔP (PIP − PEEP)",fmt(R.deltaP),"cmH₂O","");
+    if(R.mapEst!==null) h+=row("MAP estimada","" +fmt(R.mapEst),"cmH₂O","(Ti×PIP + Te×PEEP) / ciclo — control de coherencia");
+  }
+  h+='</section>';
+
+  h+='<section class="card c-violet"><h2>◈ Severidad por IO</h2>';
+  h+='<p class="note" style="margin:0 0 12px">La clasificación principal es la de falla respiratoria hipoxémica: '+
+     'es la que usan las guías de HPPRN, los ensayos de iNO y los criterios de ECMO.</p>';
+  h+=badge(R.oiHRF,"IO = "+fmt(R.oi));
+  h+='<details><summary>Si sospecha SDRA neonatal — escala de Montreux</summary>'+
+     '<p class="note">Solo aplique esta escala si además se cumplen: inicio agudo &lt; 7 días desde un insulto '+
+     'conocido, infiltrados bilaterales en la imagen, exclusión de edema cardiogénico por ecocardiografía y '+
+     'exclusión de SDR o taquipnea transitoria puros.</p>'+badge(R.oiMon,"IO = "+fmt(R.oi))+'</details>';
+  h+='<div class="sect">PALICC-2 2023 — SIN LÍNEA ARTERIAL</div>';
+  h+=badge(R.osiC,"OSI = "+fmt(R.osi))+badge(R.sfC,"SaFi = "+fmt(R.sf,0));
+  h+='<div class="sect">ÍNDICES DE APOYO</div>';
+  h+=badge(R.pfC_,"P/F corregido = "+fmt(R.pfC,0)+" mmHg");
+  h+=badge(R.aaC,"Gradiente A–a = "+fmt(R.aaGrad)+" mmHg");
+  h+=badge(R.aAC,"a/A = "+fmt(R.aA));
+  if(R.ductal!==null) h+=badge(R.ductC,"Gradiente ductal = "+fmt(R.ductal,0)+" %");
+  h+='<details><summary>Ver todos los umbrales</summary><div class="thresholds">'+
+     '<b>IO · falla respiratoria hipoxémica (principal)</b>≤ 15 leve · 16–25 moderada · 26–40 severa · &gt; 40 muy severa'+
+     '<b>IO · Montreux (NARDS, secundaria)</b>&lt; 4 no cumple · 4–7.9 leve · 8–15.9 moderado · ≥ 16 severo'+
+     '<b>OSI · PALICC-2</b>&lt; 5 no cumple · 5–7.4 leve · 7.5–12.2 moderada · ≥ 12.3 severa'+
+     '<b>SpO₂/FiO₂ · PALICC-2</b>&gt; 250 no cumple (umbral revisado desde 264)'+
+     '<b>Equivalencias OSI↔IO en neonatos ventilados</b>OSI ≈ 7.45 → IO 15 · OSI ≈ 9.9 → IO 25'+
+     '<b>Gradiente A–a (solo a FiO₂ ≥ 0.9)</b>&lt; 150 sin alteración · 150–399 moderada · 400–599 severa · ≥ 600 criterio clásico ECMO'+
+     '<b>a/A (referencia fisiológica, no de guía)</b>&gt; 0.75 normal · 0.61–0.75 leve · 0.31–0.60 moderada · ≤ 0.30 severa'+
+     '</div></details></section>';
+
+  h+='<section class="card c-green"><h2>◈ Metas de monitoreo</h2>'+
+     '<p class="note" style="margin:0 0 12px">Objetivos de titulación, no clasificación de gravedad. Un valor puede estar '+
+     '"fuera de meta" aquí y seguir siendo leve en la escala de FRH. Para decidir iNO o ECMO use el bloque de severidad.</p>';
+  h+=badge(R.metas.aa,"Gradiente A–a = "+fmt(R.aaGrad)+" mmHg");
+  h+=badge(R.metas.oi,"IO = "+fmt(R.oi));
+  h+=badge(R.metas.osi,"OSI = "+fmt(R.osi));
+  h+=badge(R.metas.safi,"SaFi = "+fmt(R.sf,0));
+  h+=badge(R.metas.vq,"Rel V:Q = "+fmt(R.aA));
+  h+=badge(R.metas.shunt,"Cortocircuito D→I = "+(R.shunt?fmt(R.shunt.qs,1)+" %":"—"));
+  h+='<p class="note">"Rel V:Q" es la relación a/A (PaO₂/PAO₂), no un cociente ventilación-perfusión medido. '+
+     'Saturación cerebral y fracción de extracción quedan fuera: requieren NIRS.</p>';
+  h+=pruebaBlock(R)+'</section>';
+
+  h+='<section class="card c-violet"><h2>◈ Orientación fisiopatológica</h2>'+
+     '<p class="note" style="margin:0 0 10px">Estos índices no separan shunt de desequilibrio V/Q. A–a, a/A e IR son '+
+     'transformaciones de las mismas tres cifras. La discriminación real exige gradiente ductal, respuesta a FiO₂ 1.0 '+
+     'y ecocardiografía funcional.</p>';
+  R.orient.forEach(o=>{h+='<div style="display:flex;gap:11px;align-items:flex-start;margin-bottom:8px;padding:12px;'+
+    'background:#f7f9fb;border-radius:8px;border:1px solid '+o.c+'33"><span style="color:'+o.c+
+    ';font-size:17px;line-height:1.3">'+o.i+'</span><span style="color:'+o.c+';font-size:15px;line-height:1.5">'+
+    esc(o.t)+'</span></div>';});
+  h+='</section>';
+
+  h+='<section class="card c-gray"><h2>◈ Validación</h2>'+flagList(R.flags)+'</section>';
+
+  h+='<section class="card c-gray"><h2>◈ Referencias</h2><div class="refs">'+
+     'De Luca D et al. The Montreux definition of neonatal ARDS. Lancet Respir Med 2017.<br>'+
+     'Emeriaud G et al. Executive summary PALICC-2. Pediatr Crit Care Med 2023;24:143–68.<br>'+
+     'ELSO. Neonatal Respiratory Failure Supplement / Red Book 6.ª ed.<br>'+
+     'Smith &amp; Jones. Non-invasive assessment of shunt and VA/Q in neonates. ADC Fetal Neonatal Ed 2001;85:F127.<br>'+
+     'Lockwood et al. 2014 — algoritmo de tres compartimentos.<br>'+
+     'Karbing / Rees — modelo de dos parámetros (ALPE).<br>'+
+     'Unstable SpO₂ in preterm infants: reduced VA/Q. Front Physiol 2023.'+
+     '</div></section>';
+
+  $("out").innerHTML=h;
+}
+
+let tmr=null;
+function run(){ render(compute()); }
+function schedule(){ clearTimeout(tmr); tmr=setTimeout(run,140); }
+
+IDS.forEach(id=>$(id).addEventListener("input",schedule));
+for(let i=0;i<PAIRS;i++){ $("pf"+i).addEventListener("input",schedule); $("ps"+i).addEventListener("input",schedule); }
+
+$("clear").addEventListener("click",()=>{
+  IDS.forEach(id=>{$(id).value = id==="temp"?"37" : id==="alt"?"0" : "";});
+  for(let i=0;i<PAIRS;i++){ $("pf"+i).value=""; $("ps"+i).value=""; }
+  hbSel=""; [...$("hbseg").children].forEach(x=>x.setAttribute("aria-pressed","false"));
+  run(); window.scrollTo({top:0,behavior:"smooth"});
+});
+
+/* Estado de red y service worker */
+function netState(){
+  const el=$("netstate");
+  el.textContent = navigator.onLine ? "En línea · funciona también sin conexión" : "Sin conexión · funcionando desde la memoria del teléfono";
+  el.style.color = navigator.onLine ? "#4a6274" : "#8a5a00";
+}
+window.addEventListener("online",netState); window.addEventListener("offline",netState);
+netState();
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+
+run();
+</script>
+</body>
+</html>
